@@ -28,7 +28,7 @@ class System(object):
         if retcode != 0:
             return False
 
-        return '%s.%s' % (str(os_version.dwMajorVersion.real), str(os_version.dwMinorVersion.real))
+        return f'{str(os_version.dwMajorVersion.real)}.{str(os_version.dwMinorVersion.real)}'
 
     def isx64machine(self):
         archi = os.environ.get("PROCESSOR_ARCHITEW6432", '')
@@ -36,7 +36,4 @@ class System(object):
             return True
 
         archi = os.environ.get("PROCESSOR_ARCHITECTURE", '')
-        if '64' in archi:
-            return True
-
-        return False
+        return '64' in archi

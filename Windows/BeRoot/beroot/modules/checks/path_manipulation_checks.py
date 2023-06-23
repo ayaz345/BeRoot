@@ -10,11 +10,7 @@ def is_root_dir_writable(path, is_dir=False):
     """
     Check the permission of an exe file
     """
-    if is_dir:
-        dirname = path
-    else:
-        dirname = ntpath.dirname(path)
-
+    dirname = path if is_dir else ntpath.dirname(path)
     new_path = os.path.join(dirname, "a.txt")
 
     try:
@@ -76,9 +72,11 @@ def space_and_no_quotes(data):
     """
     results = []
     for sk in data:
-        for p in sk.paths:
-            if p.has_space and not p.has_quotes and p.sub_dir_writables:
-                results.append(format_results(sk, p, True))
+        results.extend(
+            format_results(sk, p, True)
+            for p in sk.paths
+            if p.has_space and not p.has_quotes and p.sub_dir_writables
+        )
     return results
 
 
@@ -88,9 +86,7 @@ def exe_with_writable_directory(data):
     """
     results = []
     for sk in data:
-        for p in sk.paths:
-            if p.is_dir_writable:
-                results.append(format_results(sk, p))
+        results.extend(format_results(sk, p) for p in sk.paths if p.is_dir_writable)
     return results
 
 
@@ -121,8 +117,5 @@ def format_results(sk, p, check_subdir=False):
     if not check_subdir:
         results['Writable directory'] = os.path.dirname(p.path)
     else:
-        results['Writable paths found'] = []
-        for d in p.sub_dir_writables:
-            results['Writable paths found'].append(d)
-
+        results['Writable paths found'] = list(p.sub_dir_writables)
     return results

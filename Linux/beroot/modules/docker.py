@@ -33,12 +33,11 @@ class Docker:
         """
         List if a mounted docker socket has been found and if its path is writable
         """
-        socks = []
-        for socket in self.sockets:
-            if os.path.exists(socket):
-                socks.append({
-                    'Sock': socket,
-                    'Writable': "True" if File(socket).is_writable(user) else "False"
-                })
-
-        return socks
+        return [
+            {
+                'Sock': socket,
+                'Writable': "True" if File(socket).is_writable(user) else "False",
+            }
+            for socket in self.sockets
+            if os.path.exists(socket)
+        ]

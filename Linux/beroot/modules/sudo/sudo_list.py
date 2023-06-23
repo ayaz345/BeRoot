@@ -39,10 +39,7 @@ class SudoList(object):
         - user is a string
         - u is an object
         """
-        for u in self.users.list:
-            if u.pw_name == user:
-                return u
-        return False
+        return next((u for u in self.users.list if u.pw_name == user), False)
 
     def rules_from_sudo_ll(self):
         """
@@ -112,8 +109,7 @@ class SudoList(object):
                         # Do not perform further checks as it's already to impersonate root user
                         args = cmd.line.strip()[cmd.line.strip().index(c.basename) + len(c.basename):].strip()
                         if args.strip() and args.strip() not in ['root', '*']:
-                            u = self._get_user(args.strip())
-                            if u:
+                            if u := self._get_user(args.strip()):
                                 users.append(u)
         return users
 
@@ -134,16 +130,14 @@ class SudoList(object):
         echo "test" | sudo -S -l
         EOF
         """
-        data = ''
-        for u in users_chain:
-            data += "sudo su {user} << 'EOF'\n".format(user=u)
+        data = ''.join("sudo su {user} << 'EOF'\n".format(user=u) for u in users_chain)
         data += self.sudo_cmd + '\n'
-        
+
         if users_chain: 
             data += '\nEOF'
 
-        rand = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
-        path = os.path.join(tempfile.gettempdir(), rand) + '.sh'
+        rand = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+        path = f'{os.path.join(tempfile.gettempdir(), rand)}.sh'
         with open(path, 'w') as file:
             file.write(data)
 
@@ -161,8 +155,7 @@ class SudoList(object):
         """
         for u in self._get_user_to_impersonate(sudo_rules):
             if u not in already_impersonated:
-                sudo_list = self._impersonate_user(users_chain=[user, u])
-                if sudo_list:
+                if sudo_list := self._impersonate_user(users_chain=[user, u]):
                     try:
                         sudo_rules = self._parse_sudo_list(sudo_list)
                         self._impersonate_mechanism(u, sudo_rules, [user, u], already_impersonated)

@@ -32,7 +32,7 @@ class DoAttack(object):
             remoteOps.enableRegistry()
         except Exception as e:
             # Something wen't wrong, most probably we don't have access as admin. aborting
-            print(str(e))
+            print(e)
             return False
 
         try:
@@ -43,7 +43,7 @@ class DoAttack(object):
             self.__SMBConnection.deleteFile('ADMIN$', 'Temp\\__output')
 
         except Exception as e:
-            print(str(e))
+            print(e)
             self.__answerTMP = 'ERROR'
         finally:
             if remoteOps is not None:

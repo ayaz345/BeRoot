@@ -25,9 +25,9 @@ class SudoersFile(object):
         Get content from /etc/sudoers
         Concatenate will all rules found on /etc/sudoers.d/ directory
         """
-        content = ''
         f = File(self.sudoers_file)
         if f.is_readable():
+            content = ''
             content += open(self.sudoers_file).read()
 
             if os.path.exists(self.sudoers_dir):

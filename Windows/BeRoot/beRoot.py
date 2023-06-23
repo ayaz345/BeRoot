@@ -17,7 +17,7 @@ def print_output(output):
                 st += '\n# %s\n'% desc
                 st += '%s\n' % result
 
-    print(str(st))
+    print(st)
 
 
 def run_check_all(list_softwares):
@@ -27,13 +27,14 @@ def run_check_all(list_softwares):
     if list_softwares: 
         f = get_sofwares
 
-    for r in f():
-        yield r
+    yield from f()
 
 
 if __name__ == '__main__':
-    banner = '|====================================================================|\n'
-    banner += '|                                                                    |\n'
+    banner = (
+        '|====================================================================|\n'
+        + '|                                                                    |\n'
+    )
     banner += '|                    Windows Privilege Escalation                    |\n'
     banner += '|                                                                    |\n'
     banner += '|                          ! BANG BANG !                             |\n'

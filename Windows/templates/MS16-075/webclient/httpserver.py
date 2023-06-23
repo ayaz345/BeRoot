@@ -62,7 +62,6 @@ class HTTPRelayServer():
             messageType = 0
             if self.headers.getheader('Authorization') is None:
                 self.do_AUTHHEAD(message='NTLM')
-                pass
             else:
                 # constants.is_running = True
                 typeX = self.headers.getheader('Authorization')
@@ -79,13 +78,13 @@ class HTTPRelayServer():
                     self.client = SMBClient(self.target, extended_security=True)
                     self.client.set_timeout(60)
                 except Exception as e:
-                    print("Connection against target %s FAILED" % self.target)
-                    print(str(e))
+                    print(f"Connection against target {self.target} FAILED")
+                    print(e)
 
                 clientChallengeMessage = self.client.sendNegotiate(token)
                 self.challengeMessage = NTLMAuthChallenge()
                 self.challengeMessage.fromString(clientChallengeMessage)
-                self.do_AUTHHEAD(message='NTLM ' + base64.b64encode(clientChallengeMessage))
+                self.do_AUTHHEAD(message=f'NTLM {base64.b64encode(clientChallengeMessage)}')
 
             elif messageType == 3:
                 authenticateMessage = NTLMAuthChallengeResponse()

@@ -268,7 +268,6 @@ class GTFOBins:
         """
         Found the associated command line to execute system code using the binary
         """
-        for b in self.binaries:
-            if b == binary.lower():
-                return self.binaries[b]
-        return False
+        return next(
+            (self.binaries[b] for b in self.binaries if b == binary.lower()), False
+        )

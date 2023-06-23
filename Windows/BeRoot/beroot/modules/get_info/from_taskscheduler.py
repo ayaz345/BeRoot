@@ -16,63 +16,13 @@ class GetTaskschedulers(object):
         self.task_directory = os.path.join(os.environ.get('systemroot'), 'system32\Tasks')
         s = System()
 
-        self.disable_redirection = False
-        if s.isx64:
-            self.disable_redirection = True
+        self.disable_redirection = bool(s.isx64)
 
     def tasks_list(self):
         tasks = []
 
         # manage tasks for windows XP
-        if platform.release() == 'XP' or platform.release() == '2003':
-            pass
-        # try:
-        # 	from win32com.taskscheduler import taskscheduler
-
-        # 	ts = pythoncom.CoCreateInstance(
-        # 										taskscheduler.CLSID_CTaskScheduler,
-        # 										None,
-        # 										pythoncom.CLSCTX_INPROC_SERVER,
-        # 										taskscheduler.IID_ITaskScheduler
-        # 									)
-        # except:
-        # 	return False
-
-        # Loop through all scheduled task
-        # tasks = ts.Enum()
-        # for job in tasks:
-        # 	task = ts.Activate(job)
-
-        # 	t = Taskscheduler()
-        # 	t.name = job
-
-        # check if the tasks file has write access
-        # taskpath = '%s%s%s%s%s' % (os.environ['systemroot'], os.sep, 'Tasks', os.sep, job)
-        # TO DO
-        # if os.path.exists(taskpath):
-        # 	if checkPermissions(taskpath):
-        # 		results = results + '<strong><font color=ff0000>Write access on: ' + taskpath + '</font></strong><br/>\n'
-
-        # run as
-        # try:
-        # 	t.runas = task.GetCreator()
-        # except:
-        # 	pass
-
-        # path of the exe file
-        # try:
-        # task.GetApplicationName()
-        # except:
-        # pass
-
-        # check the permission of the executable
-        # try:
-        # 	test = checkPermissions(task.GetApplicationName())
-        # except:
-        # 	pass
-
-        # manage task for windows 7
-        else:
+        if platform.release() not in ['XP', '2003']:
             if self.disable_redirection:
                 wow64 = ctypes.c_long(0)
                 ctypes.windll.kernel32.Wow64DisableWow64FsRedirection(ctypes.byref(wow64))
@@ -125,20 +75,14 @@ class GetTaskschedulers(object):
                                                 if execution.text:
                                                     arguments = os.path.expandvars(execution.text)
 
-                        full_path = '%s %s' % (str(command), str(arguments))
-                        full_path = full_path.strip()
-
-                        if full_path:  # and runlevel != 'LeastPrivilege':
+                        full_path = f'{str(command)} {str(arguments)}'
+                        if full_path := full_path.strip():
                             t = Taskscheduler()
                             t.name = f
                             t.full_path = full_path
                             t.paths = get_path_info(t.full_path)
 
-                            if userid == 'S-1-5-18':
-                                t.userid = 'LocalSystem'
-                            else:
-                                t.userid = userid
-
+                            t.userid = 'LocalSystem' if userid == 'S-1-5-18' else userid
                             t.groupid = groupid
                             t.runlevel = runlevel
 

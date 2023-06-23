@@ -29,9 +29,7 @@ for file in os.listdir(root):
                                  'shell', 'file-download', 'file-upload']:
                         if func in functions:
                             sep = '----' if len(functions[func]) > 1 else ''
-                            c = ''
-                            for code in functions[func]:
-                                c += code['code'] + '\n' + sep
+                            c = ''.join(code['code'] + '\n' + sep for code in functions[func])
                             results[binary] = c
                             break
 

@@ -73,7 +73,7 @@ class InterestingFiles(object):
 
                 if subfile.is_writable(user) and not subfiles.line.startswith('#'):
                     has_write_access.append(
-                        '[writable: %s] => %s%s' % (subfile.path, subfiles.line, dir_writable)
+                        f'[writable: {subfile.path}] => {subfiles.line}{dir_writable}'
                     )
         return has_write_access
 
@@ -98,16 +98,13 @@ class InterestingFiles(object):
                     dir_writable = True
 
             if subfiles or perm or dir_writable:
-                values = {
-                    'path': '%s %s' % (p.file.path, perm)
-                }
+                values = {'path': f'{p.file.path} {perm}'}
 
-                if subfiles: 
-                    values['subfiles'] = subfiles
+            if subfiles:
+                values['subfiles'] = subfiles
 
-                if dir_writable:
-                    if subfiles: 
-                        values['directory'] = '%s [writable]' % p.file.dirname
+                if dir_writable: 
+                    values['directory'] = f'{p.file.dirname} [writable]'
 
             if values: 
                 has_write_access.append(values)
@@ -116,8 +113,6 @@ class InterestingFiles(object):
         for directory in ['/usr/lib', '/lib']:
             f = File(directory)
             if f.is_writable(user):
-                has_write_access.append({
-                    'path': '%s [writable]' % directory
-                })
+                has_write_access.append({'path': f'{directory} [writable]'})
 
         return has_write_access

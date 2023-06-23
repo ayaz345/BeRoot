@@ -19,13 +19,7 @@ from ctypes.wintypes import *
 UCHAR = c_ubyte
 
 # x86 bits system
-if sizeof(c_voidp) == 4:
-    ULONGLONG = c_longlong
-# x64 bits system
-else:
-    ULONGLONG = c_ulonglong
-
-
+ULONGLONG = c_longlong if sizeof(c_voidp) == 4 else c_ulonglong
 class GUID(Structure):
     _fields_ = [
         ("Data1", DWORD),
@@ -76,10 +70,7 @@ class WebClient(object):
         except Exception:
             pass
 
-        if smb_signature == 0 and server_name_hardening == 0:
-            return False
-        else:
-            return True
+        return smb_signature != 0 or server_name_hardening != 0
 
     # start the WebClient service from a limited user
     def start_webclient(self):
@@ -128,7 +119,7 @@ class WebClient(object):
             for s in service:
                 if s.name.lower() == svc.lower() and s.permissions['start']:
                     is_service_running = self.is_service_running(svc)
-                    if not is_service_running or (is_service_running and s.permissions['stop']):
+                    if not is_service_running or s.permissions['stop']:
                         triggers.append(s)
                         print('[+] Service {name} found'.format(name=s.name))
                     else:
@@ -173,8 +164,9 @@ class WebClient(object):
         lpcchBuffer = LPDWORD()
         lpDisplayName = PCTSTR()
         lpServiceName = PCTSTR()
-        result = GetServiceKeyName(hscm, byref(lpDisplayName), byref(lpServiceName), lpcchBuffer)
-        if result:
+        if result := GetServiceKeyName(
+            hscm, byref(lpDisplayName), byref(lpServiceName), lpcchBuffer
+        ):
             name = lpServiceName.value
             return OpenService(hscm, name, access)
         else:
@@ -183,8 +175,7 @@ class WebClient(object):
     def StartService(self, service_name, args=0, machine=None):
         hscm = OpenSCManager(machine, None, SC_MANAGER_CONNECT)
         try:
-            hs = self.smart_open_service(hscm, service_name, SERVICE_START)
-            if hs:
+            if hs := self.smart_open_service(hscm, service_name, SERVICE_START):
                 try:
                     StartService(hs, args, None)
                 finally:
@@ -195,8 +186,7 @@ class WebClient(object):
     def StopService(self, service_name, machine=None):
         hscm = OpenSCManager(machine, None, SC_MANAGER_CONNECT)
         try:
-            hs = self.smart_open_service(hscm, service_name, SERVICE_STOP)
-            if hs:
+            if hs := self.smart_open_service(hscm, service_name, SERVICE_STOP):
                 try:
                     ss = SERVICE_STATUS()
                     ControlService(hs, SERVICE_CONTROL_STOP, byref(ss))
@@ -223,12 +213,7 @@ class WebClient(object):
                     return False
 
         print('[!] Find services used to trigger an NTLM hash')
-        triggers = self.find_services_trigger(service)
-        if not triggers:
-            print('[-] No service found')
-            return False
-
-        else:
+        if triggers := self.find_services_trigger(service):
             for trigger in triggers:
                 error = False
                 port = randint(8000, 9999)
@@ -278,6 +263,10 @@ class WebClient(object):
                 if not error:
                     break
 
+        else:
+            print('[-] No service found')
+            return False
+
         ok = False
         if constants.authentication_succeed:
             try:
@@ -295,7 +284,7 @@ class WebClient(object):
         elif constants.authentication_succeed == False:
             print('[-] Authentication failed; seems not vulnerable')
 
-        elif constants.authentication_succeed == None:
+        elif constants.authentication_succeed is None:
             print('[?] The authentication process has not reached the end, try to check the standard output')
 
         return ok

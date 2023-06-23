@@ -55,10 +55,14 @@ class GetServices(object):
         """
         Check if the service has already been loaded from registry
         """
-        for service in services_loaded:
-            if service.full_path == full_path and service.name == name:
-                return service
-        return False
+        return next(
+            (
+                service
+                for service in services_loaded
+                if service.full_path == full_path and service.name == name
+            ),
+            False,
+        )
 
     def get_service_permissions(self, s):
         """
@@ -77,12 +81,11 @@ class GetServices(object):
         Check if a service can be started
         """
         try:
-            sv = OpenService(hnd, s.name, SERVICE_START)
-            if sv: 
+            if sv := OpenService(hnd, s.name, SERVICE_START):
                 return True
         except Exception:
             pass
-        
+
         return False
 
     def service_stop(self, hnd, s):
@@ -90,12 +93,11 @@ class GetServices(object):
         Check if a service can be stopped
         """
         try:
-            sv = OpenService(hnd, s.name, SERVICE_STOP)
-            if sv:
+            if sv := OpenService(hnd, s.name, SERVICE_STOP):
                 return True
         except Exception:
             pass
-        
+
         return False
 
     def change_sercice_configuration(self, hnd, s):
@@ -103,8 +105,7 @@ class GetServices(object):
         Check if the configuration of a service can be changed
         """
         try:
-            sv = OpenService(hnd, s.name, SERVICE_CHANGE_CONFIG)
-            if sv:
+            if sv := OpenService(hnd, s.name, SERVICE_CHANGE_CONFIG):
                 return True
         except Exception:
             pass

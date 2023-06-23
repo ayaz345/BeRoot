@@ -195,8 +195,7 @@ class TOKEN_PRIVS(Structure):
 
     def get_array(self):
         array_type = LUID_AND_ATTRIBUTES*self.PrivilegeCount
-        privileges = cast(self.Privileges, POINTER(array_type)).contents
-        return privileges
+        return cast(self.Privileges, POINTER(array_type)).contents
 
     def __iter__(self):
         return iter(self.get_array())
@@ -276,33 +275,35 @@ def OpenKey(key, path, index, access):
 
 
 def EnumServicesStatus(hSCManager, dwServiceType=SERVICE_DRIVER | SERVICE_WIN32, dwServiceState=SERVICE_STATE_ALL): 
-        _EnumServicesStatusA = advapi32.EnumServicesStatusA 
-        _EnumServicesStatusA.argtypes = [SC_HANDLE, DWORD, DWORD, LPVOID, DWORD, LPDWORD, LPDWORD, LPDWORD] 
-        _EnumServicesStatusA.restype  = bool 
+    _EnumServicesStatusA = advapi32.EnumServicesStatusA
+    _EnumServicesStatusA.argtypes = [SC_HANDLE, DWORD, DWORD, LPVOID, DWORD, LPDWORD, LPDWORD, LPDWORD]
+    _EnumServicesStatusA.restype  = bool 
 
-        cbBytesNeeded    = DWORD(0) 
-        services_returned = DWORD(0) 
-        ResumeHandle     = DWORD(0) 
+    cbBytesNeeded    = DWORD(0)
+    services_returned = DWORD(0)
+    ResumeHandle     = DWORD(0) 
 
-        _EnumServicesStatusA(hSCManager, dwServiceType, dwServiceState, None, 0, byref(cbBytesNeeded), byref(services_returned), byref(ResumeHandle)) 
+    _EnumServicesStatusA(hSCManager, dwServiceType, dwServiceState, None, 0, byref(cbBytesNeeded), byref(services_returned), byref(ResumeHandle)) 
 
-        Services = [] 
-        success = False 
-        while GetLastError() == ERROR_MORE_DATA: 
-                if cbBytesNeeded.value < sizeof(ENUM_SERVICE_STATUSA): 
-                        break 
-                services_buffer = create_string_buffer("", cbBytesNeeded.value) 
-                success = _EnumServicesStatusA(hSCManager, dwServiceType, dwServiceState, byref(services_buffer), sizeof(services_buffer), byref(cbBytesNeeded), byref(services_returned), byref(ResumeHandle)) 
-                if sizeof(services_buffer) < (sizeof(ENUM_SERVICE_STATUSA) * services_returned.value): 
-                        raise WinError() 
-                lpServicesArray = cast(cast(pointer(services_buffer), c_void_p), LPENUM_SERVICE_STATUSA) 
-                for index in range(0, services_returned.value):
-                        Services.append(ServiceStatusEntry(lpServicesArray[index])) 
-                if success: break 
-        if not success: 
-                raise WinError() 
+    Services = []
+    success = False
+    while GetLastError() == ERROR_MORE_DATA: 
+        if cbBytesNeeded.value < sizeof(ENUM_SERVICE_STATUSA): 
+                break
+        services_buffer = create_string_buffer("", cbBytesNeeded.value)
+        success = _EnumServicesStatusA(hSCManager, dwServiceType, dwServiceState, byref(services_buffer), sizeof(services_buffer), byref(cbBytesNeeded), byref(services_returned), byref(ResumeHandle))
+        if sizeof(services_buffer) < (sizeof(ENUM_SERVICE_STATUSA) * services_returned.value): 
+                raise WinError()
+        lpServicesArray = cast(cast(pointer(services_buffer), c_void_p), LPENUM_SERVICE_STATUSA)
+        Services.extend(
+            ServiceStatusEntry(lpServicesArray[index])
+            for index in range(0, services_returned.value)
+        )
+        if success: break
+    if not success: 
+            raise WinError() 
 
-        return Services 
+    return Services 
 
 
 def get_process_token():
@@ -341,12 +342,10 @@ def get_currents_privs():
     finally:
         CloseHandle(hToken)
 
-    privs = tuple(
-        (x.get_name(), x.is_enabled()) for x in cast(
-            cBuffer, POINTER(TOKEN_PRIVS)).contents
+    return tuple(
+        (x.get_name(), x.is_enabled())
+        for x in cast(cBuffer, POINTER(TOKEN_PRIVS)).contents
     )
-
-    return privs
 
 
 def GetUserName():
@@ -378,6 +377,4 @@ def to_unicode(x):
 def try_empty_login(username):
     hToken = HANDLE(INVALID_HANDLE_VALUE)
     logged_on = LogonUser(username, "", None, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, byref(hToken))
-    if logged_on or GetLastError() == 1327:
-        return True
-    return False
+    return bool(logged_on or GetLastError() == 1327)

@@ -37,8 +37,7 @@ class Softwares(object):
             try:
                 skey = OpenKey(hkey, sk, 0, access_read)
 
-                name = str(winreg.QueryValueEx(skey, "DisplayName")[0])
-                if name:
+                if name := str(winreg.QueryValueEx(skey, "DisplayName")[0]):
                     # regex to not match security patch (KB)
                     m = re.match(r".*KB[0-9]{5,7}.*", name, re.IGNORECASE)
                     if not m:
@@ -86,9 +85,8 @@ class Softwares(object):
         results = []
         for i in self.list_softwares:
             for av in av_list:
-                m = re.match(r".*" + av + ".*", i.name, re.IGNORECASE)
-                if m:
-                    antivirus_info = '%s %s ' % (i.name, i.version)
+                if m := re.match(f".*{av}.*", i.name, re.IGNORECASE):
+                    antivirus_info = f'{i.name} {i.version} '
                     if antivirus_info not in results:
                         results.append(antivirus_info)
 

@@ -21,10 +21,7 @@ class Sudo(object):
         - user is a string
         - u is an object
         """
-        for u in self.users.list:
-            if u.pw_name == user:
-                return u
-        return False
+        return next((u for u in self.users.list if u.pw_name == user), False)
 
     def anaylyse_sudo_rules(self, sudo_rules):
         """
@@ -47,7 +44,7 @@ class Sudo(object):
             rule_ok = False
             for user_or_group in rules['users']:
                 if (user_or_group.startswith('%') and user_or_group[1:] in user_groups) \
-                        or (self.user.pw_name == user_or_group):
+                            or (self.user.pw_name == user_or_group):
                     rule_ok = True
 
             if not rule_ok:
@@ -58,7 +55,7 @@ class Sudo(object):
                 # Action denied, continue
                 if cmd.line.startswith('!'):
                     continue
-                
+
                 # All access
                 if cmd.line.lower().strip() == 'all':
                     results.append({
@@ -72,18 +69,18 @@ class Sudo(object):
                     # Check write access on a file or for a gtfobin 
                     write_access = c.is_writable(self.user)
                     shell_escape = self.gtfobins.find_binary(c.basename)
-                    
+
                     if write_access or shell_escape:
                         result = {'rule': rules.get('line', cmd.line)}
                         if write_access:
-                            result['path'] = '%s [writable]' % c.path
+                            result['path'] = f'{c.path} [writable]'
                         if shell_escape: 
-                            result['gtfobins found (%s)' % c.basename] = shell_escape.split('\n')
+                            result[f'gtfobins found ({c.basename})'] = shell_escape.split('\n')
 
                         results.append(result)
 
                     # check if user impersonation is possible
-                    if c.basename == 'su':                        
+                    if c.basename == 'su':        
                         args = cmd.line.strip()[cmd.line.strip().index(c.basename) + len(c.basename):].strip()
 
                         results.append({
@@ -93,9 +90,7 @@ class Sudo(object):
 
                         # Do not perform further checks as it's already to impersonate root user
                         if args.strip() and args.strip() not in ['root', '*']:
-                            # User to impersonate not found on the filesystems
-                            u = self._get_user(args.strip())
-                            if u:
+                            if u := self._get_user(args.strip()):
                                 self.can_impersonate.append(u)
 
         return results

@@ -57,10 +57,7 @@ class RunChecks(object):
         '''
         Convert a tab of string into a string
         '''
-        string = ''
-        for value in tab:
-            string += '%s\n' % value
-        return string
+        return ''.join('%s\n' % value for value in tab)
 
     def bool_to_string(self, value):
         '''
@@ -144,12 +141,17 @@ class RunChecks(object):
         '''
         return {
             'category': 'Taskscheduler',
-            'results': [
-                (
-                    'Permission to write on the task directory: %s' % self.t.task_directory, 
-                    self.bool_to_string(is_root_dir_writable(self.t.task_directory))
-                )
-            ] +  self._check_path_misconfiguration(self.task)
+            'results': (
+                [
+                    (
+                        f'Permission to write on the task directory: {self.t.task_directory}',
+                        self.bool_to_string(
+                            is_root_dir_writable(self.t.task_directory)
+                        ),
+                    )
+                ]
+                + self._check_path_misconfiguration(self.task)
+            ),
         }
 
     def get_interesting_files(self):
@@ -174,10 +176,9 @@ class RunChecks(object):
         '''
         Useful to find Windows Redistributable version or software vulnerable
         '''
-        sof_list = []
-        for soft in self.softwares.list_softwares:
-            sof_list.append('%s %s' % (soft.name, soft.version))
-
+        sof_list = [
+            f'{soft.name} {soft.version}' for soft in self.softwares.list_softwares
+        ]
         return {
             'category': 'Softwares',
             'results': [
@@ -277,8 +278,8 @@ def check_all():
                     break
         except Exception:
             yield {
-                'category': 'error on: %s' % str(c.__name__),
-                'error': traceback.format_exc()
+                'category': f'error on: {str(c.__name__)}',
+                'error': traceback.format_exc(),
             }
 
     if not found:
@@ -289,7 +290,4 @@ def check_all():
 
 
 def run():
-    results = []
-    for r in check_all():
-        results.append(r)
-    return results
+    return list(check_all())

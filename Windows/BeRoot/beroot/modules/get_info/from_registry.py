@@ -17,7 +17,7 @@ class Registry(object):
     # --------------------------------------- StartUp Key functions ---------------------------------------
 
     def define_path(self):
-        runkeys_hklm = [
+        return [
             r"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
             r"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
             r"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunService",
@@ -25,9 +25,8 @@ class Registry(object):
             r"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Run",
             r"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
             r"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\RunService",
-            r"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\RunOnceService"
+            r"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\RunOnceService",
         ]
-        return runkeys_hklm
 
     def get_sensitive_registry_key(self):
         """
@@ -108,13 +107,11 @@ class Registry(object):
                 sk.is_key_writable = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\%s" % svc
             except Exception:
                 skey = OpenKey(hkey, svc, 0, access_read)
-                pass
-
             # ------ Check if the key has the Parameters\Application value presents ------
             try:
-                # Find display name
-                display_name = str(winreg.QueryValueEx(skey, 'DisplayName')[0])
-                if display_name:
+                if display_name := str(
+                    winreg.QueryValueEx(skey, 'DisplayName')[0]
+                ):
                     sk.display_name = display_name
             except Exception:
                 # In case there is no key called DisplayName
@@ -124,10 +121,7 @@ class Registry(object):
             try:
                 skey = OpenKey(hkey, svc, 0, access_read)
 
-                # Find ImagePath name
-                image_path = str(winreg.QueryValueEx(skey, 'ImagePath')[0])
-
-                if image_path:
+                if image_path := str(winreg.QueryValueEx(skey, 'ImagePath')[0]):
                     image_path = os.path.expandvars(image_path)
 
                     if 'drivers' not in image_path.lower():

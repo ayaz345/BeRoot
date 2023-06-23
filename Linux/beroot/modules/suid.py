@@ -35,7 +35,7 @@ class SuidBins:
         return suid
 
     def _is_bin_present(self, binary):
-        out, err = run_cmd('which %s' % binary)
+        out, err = run_cmd(f'which {binary}')
         if out:
             return True
 
@@ -54,21 +54,23 @@ class SuidBins:
         """
         # To much false positive using strings on system
         # cmd = 'strings %s | grep "^system$"' % binary
-        cmd = 'objdump -T %s | grep " system"' % binary
+        cmd = f'objdump -T {binary} | grep " system"'
         out, _ = run_cmd(cmd)
         results = []
         if out:
             # system call detected
-            cmd = 'strings %s' % binary
+            cmd = f'strings {binary}'
             out, _ = run_cmd(cmd)
             for line in out.split(b'\n'):
 
                 if not isinstance(line, str):
                     line = line.decode(sys.getfilesystemencoding())
 
-                for string in line.split():
-                    if not string.startswith('/') and self._is_built_in_bin(string):
-                        results.append('%s -> %s'% (line, string))
+                results.extend(
+                    f'{line} -> {string}'
+                    for string in line.split()
+                    if not string.startswith('/') and self._is_built_in_bin(string)
+                )
         return results
 
     def _check_for_exec_call(self, binary, user):
@@ -76,21 +78,21 @@ class SuidBins:
         Check if exec functions are used and try to check if writable files are present
         exec functions run an executable with absolute path so it's different from system function
         """
-        cmd = 'strings %s | grep -E "execve|execl|execlp|execle|execv|execvp|execvpe"' % binary
+        cmd = f'strings {binary} | grep -E "execve|execl|execlp|execle|execv|execvp|execvpe"'
         out, _ = run_cmd(cmd)
         results = []
-        # Remove false positive
-        blacklist_path = ('/dev/', '/var/', '/tmp/')
-
         if out:
-            cmd = 'strings %s' % binary
+            cmd = f'strings {binary}'
             out, _ = run_cmd(cmd)
+            # Remove false positive
+            blacklist_path = ('/dev/', '/var/', '/tmp/')
+
             for line in out.decode().split('\n'):
                 if line.startswith('/') and os.path.exists(line):
                     if not line.startswith((blacklist_path)):
                         f = File(line)
                         if f.is_writable(user):
-                            results.append('%s [writable]' % line)
+                            results.append(f'{line} [writable]')
         return results
 
     def check_suid_bins(self, user):
@@ -100,20 +102,17 @@ class SuidBins:
             if suid.is_writable(user):
                 perm = '[writable]'
 
-            values = {'suid': '%s %s' % (suid.path, perm)}
-            shell_escape = self.gtfobins.find_binary(suid.basename)
-            if shell_escape:
+            values = {'suid': f'{suid.path} {perm}'}
+            if shell_escape := self.gtfobins.find_binary(suid.basename):
                 escapes = shell_escape.split('\n')
                 values['[+] gtfobins found'] = escapes
 
             if self.is_string_present and self.is_objdump_present:
-                found = self._check_for_system_call(suid.path)
-                if found:
+                if found := self._check_for_system_call(suid.path):
                     values['[+] system calls found'] = found
 
             if self.is_string_present:
-                found = self._check_for_exec_call(suid.path, user)
-                if found:
+                if found := self._check_for_exec_call(suid.path, user):
                     values['[+] exec calls found'] = found
 
             suids.append(values)

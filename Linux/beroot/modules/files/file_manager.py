@@ -59,9 +59,8 @@ class FileManager(object):
         result = []
         try:
             with open(path) as f:
-                for line in f.readlines():
-                    paths = self.extract_paths_from_string(line.strip())
-                    if paths:
+                for line in f:
+                    if paths := self.extract_paths_from_string(line.strip()):
                         result.append(
                             PathInFile(line=line.strip(), paths=paths)
                         )

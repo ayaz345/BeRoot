@@ -14,8 +14,7 @@ def check_sudoers_misconfigurations(file_info, services, suids, user, rules, alr
     if rules:
 
         sudo = Sudo(user)
-        paths_found = sudo.anaylyse_sudo_rules(rules)
-        if paths_found:
+        if paths_found := sudo.anaylyse_sudo_rules(rules):
             result += '### Rules for {user} ###\n\n'.format(user=user.pw_name)
             result += tab_of_dict_to_string(paths_found, new_line=False)
 

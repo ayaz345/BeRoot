@@ -53,9 +53,10 @@ def can_get_admin_access():
                 cls = TokenLinkedToken
                 ctypes.windll.advapi32.GetTokenInformation(token, cls, ctypes.byref(ltoken), ctypes.sizeof(ltoken), ctypes.byref(sz))
             except WindowsError as e:
-                if e.winerror == ERROR_NO_SUCH_LOGON_SESSION:
-                    return False
-                elif e.winerror == ERROR_PRIVILEGE_NOT_HELD:
+                if e.winerror in [
+                    ERROR_NO_SUCH_LOGON_SESSION,
+                    ERROR_PRIVILEGE_NOT_HELD,
+                ]:
                     return False
                 else:
                     raise

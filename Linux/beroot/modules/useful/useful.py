@@ -17,11 +17,10 @@ def tab_of_dict_to_string(tab, new_line=True, title=True):
                 for w in values[value]:
                     if w.strip():
                         to_end += '\t- %s\n' % w.strip()
+            elif title:
+                string += '%s: %s\n' % (value, str(values[value]))
             else:
-                if title:
-                    string += '%s: %s\n' % (value, str(values[value]))
-                else:
-                    string += '%s\n' % values[value]
+                string += '%s\n' % values[value]
         string += to_end
         if new_line:
             string += '\n'
@@ -32,10 +31,7 @@ def tab_to_string(tab):
     """
     Convert a tab of string into a string
     """
-    string = ''
-    for value in tab:
-        string += '%s\n' % value
-    return string
+    return ''.join('%s\n' % value for value in tab)
 
 
 def bool_to_string(value):
@@ -53,11 +49,5 @@ def run_cmd(cmd, is_ok=False):
                          shell=True, executable='/bin/bash')
 
     output, err = p.communicate()
-    if is_ok:
-        if p.returncode == 0:
-            return True
-        else:
-            return False
-
-    return output, err
+    return p.returncode == 0 if is_ok else (output, err)
 

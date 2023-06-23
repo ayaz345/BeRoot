@@ -22,12 +22,9 @@ def get_capabilities():
                 for line in output.decode().split('\n'):
                     if line.strip():
                         binary, capabilities = line.strip().split('=')
-                        bins.append('%s: %s' % (binary, capabilities))
+                        bins.append(f'{binary}: {capabilities}')
 
-    if bins: 
-        return tab_to_string(bins)
-
-    return False
+    return tab_to_string(bins) if bins else False
 
 
 def get_ptrace_scope():
@@ -50,7 +47,7 @@ def check_nfs_root_squashing():
     if os.path.exists(path):
         try:
             with open(path) as f:
-                for line in f.readlines():
+                for line in f:
                     if line.startswith('#'):
                         continue
 

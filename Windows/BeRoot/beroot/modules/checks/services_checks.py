@@ -30,11 +30,7 @@ def check_service_permissions(services):
                     {
                         'Name': str(service.name),
                         'Display Name': str(service.display_name),
-                        'Permissions': 'change config: %s / start: %s / stop: %s' % (
-                            service.permissions['change_config'],
-                            service.permissions['start'],
-                            service.permissions['stop']
-                        )
+                        'Permissions': f"change config: {service.permissions['change_config']} / start: {service.permissions['start']} / stop: {service.permissions['stop']}",
                     }
                 )
     return results

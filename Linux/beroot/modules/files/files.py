@@ -31,12 +31,9 @@ class File(object):
         """
         This check is used to detect an executable/script file with or without x flag
         """
-        cmd = 'file %s | cut -d " " -f 2 | grep -i ascii' % self.path
+        cmd = f'file {self.path} | cut -d " " -f 2 | grep -i ascii'
         output, err = run_cmd(cmd)
-        if output:
-            return False # is ascii
-        else:
-            return True
+        return not output
 
     def is_readable(self, user=Users().current):
         """

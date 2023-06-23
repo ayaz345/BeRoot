@@ -59,7 +59,7 @@ class Services(object):
                 if os.path.basename(argv0) == os.path.basename(argv[0]):
                     binpath = argv0
                 else:
-                    binpath = '{}| {}'.format(argv0, argv[0])
+                    binpath = f'{argv0}| {argv[0]}'
 
                 if len(argv) > 1:
                     binpath += ' ' + ' '.join([x if ' ' not in x else repr(x) for x in argv[1:]])
@@ -93,7 +93,7 @@ class Services(object):
 
             for file in service.get('files_object'):
                 if file.is_writable(user):
-                    values['binpath'].append('[writable] => %s' % file.path)
+                    values['binpath'].append(f'[writable] => {file.path}')
 
                 # Check if directory is writable
                 directory = File(file.dirname)
@@ -101,8 +101,11 @@ class Services(object):
                     if 'directory' not in values:
                         values['directory'] = []
 
-                    if '[writable] => %s' % directory.path not in values['directory']:
-                        values['directory'].append('[writable] => %s' % directory.path)
+                    if (
+                        f'[writable] => {directory.path}'
+                        not in values['directory']
+                    ):
+                        values['directory'].append(f'[writable] => {directory.path}')
 
             if values['binpath']:
                 has_write_access.append(values)
